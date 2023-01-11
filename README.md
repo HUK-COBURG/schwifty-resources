@@ -1,5 +1,7 @@
 # schwifty-resources
 
+[![Swift](https://github.com/HUK-COBURG/schwifty-resources/actions/workflows/swift.yml/badge.svg)](https://github.com/HUK-COBURG/schwifty-resources/actions/workflows/swift.yml)
+
 With `schwifty-resources` you get a schwifty way of reading and writing data.
 
 The main idea is to have a similar way of accessing local or remote resources, convenient to use, although having a high flexibility.

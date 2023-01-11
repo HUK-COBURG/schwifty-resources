@@ -23,14 +23,14 @@ Add the dependency to any targets you've declared in your manifest:
 
 ### Reading bundle resources
 
-To get some data in the bundle, use `BundleResource`, supplying a `ContentResourceCoder` for the type of data you want to read and a file name to identify it.
+To get some data in the bundle, use `BundleResource`, supplying a `ContentResourceDecoder` for the type of data you want to read and a file name to identify it.
 In this example a `StringResourceCoder` is used to get the content of the file `document.txt` in the main bundle as a `String`.
 
 ```swift
 import SchwiftyResources
 
 private struct DocumentBundleResource: BundleResource {
-    typealias ContentResourceCoder = StringResourceCoder
+    typealias ContentResourceDecoder = StringResourceCoder
     let fileName: String = "document.txt"
 }
 
@@ -45,7 +45,7 @@ do {
 
 ### Getting HTTP API content
 
-To get some data from an HTTP API, use `HttpResource`, supplying a `RequestBodyResourceCoder`, `ResponseBodyResourceCoder` and an URL.
+To get some data from an HTTP API, use `HttpResource`, supplying a `RequestBodyResourceEncoder`, `ResponseBodyResourceDecoder` and an URL.
 In this example the request body will be empty, we are expecting a JSON response body from the url `https://jsonplaceholder.typicode.com/todos` with `Todo` instances in it.
 
 ```swift
@@ -60,8 +60,8 @@ private struct Todo: Codable {
 }
 
 private struct TodosHttpResource: HttpResource {
-    typealias RequestBodyResourceCoder = EmptyResourceCoder
-    typealias ResponseBodyResourceCoder = JsonResourceCoder<[Todo]>
+    typealias RequestBodyResourceEncoder = EmptyResourceCoder
+    typealias ResponseBodyResourceDecoder = JsonResourceCoder<[Todo]>
     let url: URL = "https://jsonplaceholder.typicode.com/todos"
 }
 

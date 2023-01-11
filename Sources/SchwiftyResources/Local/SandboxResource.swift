@@ -1,5 +1,5 @@
 //
-//  UrlRequest+SchwiftyResources.swift
+//  SandboxResource.swift
 //
 //  Copyright (c) 2023 HUK-COBURG
 //
@@ -21,32 +21,45 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-import struct Foundation.URLRequest
+import Foundation.NSPathUtilities
 
-public enum HttpMethod: String {
-    case get = "GET"
-    case head = "HEAD"
-    case post = "POST"
-    case put = "PUT"
-    case delete = "DELETE"
-    case patch = "PATCH"
-    case connect = "CONNECT"
-    case options = "OPTIONS"
-    case trace = "TRACE"
+public protocol SandboxResource: FileResource {
+    /// The location inside the sandbox (e.g. caches or documents)
+    var location: SandboxLocation { get }
+    /// The path to the resource relative to the location
+    var path: String { get }
 }
 
-public extension URLRequest {
-    /// A type safe (`HttpMethod`) representation of the `httpMethod`.
-    var method: HttpMethod? {
-        get {
-            guard let httpMethodString = httpMethod else {
-                return .get
+public extension SandboxResource {
+    var url: URL {
+        get throws {
+            guard let locationUrl = location.url else {
+                throw SchwiftyResourcesError.sandboxLocationUnavailable
             }
+            
+            return locationUrl.appendingPathComponent(path, isDirectory: false)
+        }
+    }
+}
 
-            return HttpMethod(rawValue: httpMethodString.uppercased())
+public enum SandboxLocation {
+    case caches
+    case documents
+    
+    var url: URL? {
+        var path: String? = nil
+        
+        switch self {
+        case .caches:
+            path = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first
+        case .documents:
+            path = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first
         }
-        set {
-            httpMethod = newValue?.rawValue
+        
+        guard let path = path else {
+            return nil
         }
+        
+        return URL(fileURLWithPath: path)
     }
 }

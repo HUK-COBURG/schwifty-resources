@@ -1,5 +1,5 @@
 //
-//  FileResource.swift
+//  BundleResource.swift
 //
 //  Copyright (c) 2023 HUK-COBURG
 //
@@ -25,33 +25,37 @@ import class Foundation.Bundle
 import struct Foundation.Data
 import struct Foundation.URL
 
-public protocol FileResource {
-    /// The type of the content resource coder. Must conform to `ResourceCoder`.
-    associatedtype ContentResourceCoder: ResourceCoder
+public protocol BundleResource {
+    /// The type of the content resource decoder. Must conform to `ResourceDecoder`.
+    associatedtype ContentResourceDecoder: ResourceDecoder
 
     /// The instance of the content resource coder.
-    var contentResourceCoder: ContentResourceCoder { get }
-    /// The URL of the resource.
-    var url: URL { get async throws }
+    var contentResourceDecoder: ContentResourceDecoder { get }
+    /// The bundle of the resource.
+    var bundle: Bundle { get }
+    /// The file name of the resource
+    var fileName: String { get }
     /// Will try to get the data from the given url and decode it with the content resource coder.
-    func read() async throws -> ContentResourceCoder.Content
-    /// Will try to encode the content using the content resource coder and write it to the given url.
-    func write(content: ContentResourceCoder.Content) async throws
+    func read() async throws -> ContentResourceDecoder.Content
 }
 
-public extension FileResource {
-    var contentResourceCoder: ContentResourceCoder {
-        ContentResourceCoder()
+public extension BundleResource {
+    var contentResourceDecoder: ContentResourceDecoder {
+        ContentResourceDecoder()
     }
 
-    func read() async throws -> ContentResourceCoder.Content {
-        let url = try await self.url
+    var bundle: Bundle {
+        return .main
+    }
+    
+    func read() async throws -> ContentResourceDecoder.Content {
+        let url = try buildUrl()
 
         do {
             let data = try Data(contentsOf: url)
 
             do {
-                let content = try contentResourceCoder.decode(data: data)
+                let content = try contentResourceDecoder.decode(data: data)
                 return content
             } catch {
                 throw ErrorWrapper.wrapped(error)
@@ -65,15 +69,14 @@ public extension FileResource {
         }
     }
     
-    func write(content: ContentResourceCoder.Content) async throws {
-        let url = try await self.url
-        let data = try contentResourceCoder.encode(content: content)
-        
-        do {
-            try (data ?? Data()).write(to: url)
-        } catch {
-            throw SchwiftyResourcesError.cannotReadFile(error)
+    // MARK: - Private functions
+    
+    private func buildUrl() throws -> URL {
+        guard let url = bundle.url(forResource: fileName, withExtension: nil) else {
+            throw SchwiftyResourcesError.fileNotFound
         }
+
+        return url
     }
 }
 

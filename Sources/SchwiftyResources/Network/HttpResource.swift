@@ -9,12 +9,12 @@ import Foundation
 
 public protocol HttpResource {
     /// The type of the request body encoder. Must conform to `ResourceCoder`.
-    associatedtype RequestBodyResourceCoder: ResourceCoder
+    associatedtype RequestBodyResourceEncoder: ResourceEncoder
     /// The type of the response body decoder. Must conform to `ResourceCoder`.
-    associatedtype ResponseBodyResourceCoder: ResourceCoder
+    associatedtype ResponseBodyResourceDecoder: ResourceDecoder
 
     /// The instance of the request body encoder.
-    var requestBodyResourceCoder: RequestBodyResourceCoder { get }
+    var requestBodyResourceEncoder: RequestBodyResourceEncoder { get }
     /// An instance of a type, which conforms to `PathModifier`. This can be used to manipulate the URLs path, before the request is sent. Defaults to nil.
     var pathModifier: PathModifier? { get }
     /// The desired HTTP method (e.g. GET, POST, DELETE etc.). Defaults to GET.
@@ -28,11 +28,11 @@ public protocol HttpResource {
     /// Defines the time interval of the request. If this is set to nil, the default value of `URLRequest.timeoutInterval` will be used. Defaults to nil.
     var requestTimeout: TimeInterval? { get }
     /// The requests body, which will be sent to the server. The type is defined by the `BodyEncoder`.
-    var requestBody: RequestBodyResourceCoder.Content { get }
+    var requestBody: RequestBodyResourceEncoder.Content { get }
     /// An array of instances of types, which conform to `RequestModifier`. They will be executed before the request is sent in the order of the array. Defaults to nil.
     var requestModifiers: [RequestModifier]? { get }
     /// Asynchronous response for the request.
-    var response: Response<ResponseBodyResourceCoder> { get async throws }
+    var response: Response<ResponseBodyResourceDecoder> { get async throws }
     /// This handler will be called whenever the requests progress is evolving. This handler will only be called on iOS 15 and above. Defaults to nil.
     var sendProgressHandler: ProgressHandler? { get }
     /// This handler will be called whenever the responses progress is evolving. This handler will only be called on iOS 15 and above. Defaults to nil.
@@ -40,8 +40,8 @@ public protocol HttpResource {
 }
 
 public extension HttpResource {
-    var requestBodyResourceCoder: RequestBodyResourceCoder {
-        RequestBodyResourceCoder()
+    var requestBodyResourceEncoder: RequestBodyResourceEncoder {
+        RequestBodyResourceEncoder()
     }
 
     var pathModifier: PathModifier? {
@@ -68,7 +68,7 @@ public extension HttpResource {
         return nil
     }
 
-    var response: Response<ResponseBodyResourceCoder> {
+    var response: Response<ResponseBodyResourceDecoder> {
         get async throws {
             let urlRequest = try await buildUrlRequest()
 
@@ -125,9 +125,9 @@ public extension HttpResource {
         var urlRequest = URLRequest(url: url)
         urlRequest.method = method
         urlRequest.allHTTPHeaderFields = requestHeader
-        urlRequest.httpBody = try requestBodyResourceCoder.encode(content: requestBody)
+        urlRequest.httpBody = try requestBodyResourceEncoder.encode(content: requestBody)
 
-        if let contentType = requestBodyResourceCoder.contentType {
+        if let contentType = requestBodyResourceEncoder.contentType {
             urlRequest.setValue(contentType, forHTTPHeaderField: "Content-Type")
         }
 
@@ -172,8 +172,8 @@ public extension HttpResource {
     }
 }
 
-public extension HttpResource where RequestBodyResourceCoder == EmptyResourceCoder {
-    var requestBody: RequestBodyResourceCoder.Content {
+public extension HttpResource where RequestBodyResourceEncoder == EmptyResourceCoder {
+    var requestBody: RequestBodyResourceEncoder.Content {
         return ()
     }
 }

@@ -62,29 +62,10 @@ public extension FileResource {
     }
 }
 
-public protocol BundleResource: FileResource {
-    var bundle: Bundle { get }
-    var fileName: String { get }
-}
-
-public extension BundleResource {
-    var url: URL {
-        get throws {
-            guard let url = bundle.url(forResource: fileName, withExtension: nil) else {
-                throw SchwiftyResourcesError.fileNotFound
-            }
-
-            return url
-        }
-    }
-
-    var bundle: Bundle {
-        return .main
-    }
-}
-
 public protocol SandboxResource: FileResource {
+    /// The location inside the sandbox (e.g. caches or documents)
     var location: SandboxLocation { get }
+    /// The path to the resource relative to the location
     var path: String { get }
 }
 

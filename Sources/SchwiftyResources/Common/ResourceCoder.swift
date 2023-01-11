@@ -10,15 +10,25 @@ import class Foundation.JSONDecoder
 import class Foundation.JSONEncoder
 
 /// Conform to this protocol and set it as typealias of `HttpResource`, `LocalResource` or `UserDefaultsResource` to be able to en- and decode the content.
-public protocol ResourceCoder<Content> {
+public typealias ResourceCoder = ResourceEncoder & ResourceDecoder
+
+/// Conform to this protocol and set it as typealias of `HttpResource`, `LocalResource` or `UserDefaultsResource` to be able to encode the content.
+public protocol ResourceEncoder<Content> {
     associatedtype Content
     init()
     var contentType: String? { get }
     func encode(content: Content) throws -> Data?
+}
+
+/// Conform to this protocol and set it as typealias of `HttpResource`, `LocalResource` or `UserDefaultsResource` to be able to decode the content.
+public protocol ResourceDecoder<Content> {
+    associatedtype Content
+    init()
     func decode(data: Data) throws -> Content
 }
 
-/// This resource coder will encode to nil Data and decode to a `Void`. The ContentType will also be empty.
+/// This resource coder will encode to nil Data and decode to a `Void`.
+/// The ContentType will also be empty.
 public struct EmptyResourceCoder: ResourceCoder {
     public typealias Content = Void
 
@@ -35,7 +45,8 @@ public struct EmptyResourceCoder: ResourceCoder {
     }
 }
 
-/// This resource coder will just pass through the data. The ContentType has to be set.
+/// This resource coder will just pass through the data.
+/// The ContentType has to be set.
 public struct DataResourceCoder: ResourceCoder {
     public typealias Content = Data
 
@@ -52,12 +63,13 @@ public struct DataResourceCoder: ResourceCoder {
     }
 }
 
-/// This resource coder will encode the given `Model` using a default `JSONEncoder` and decode the data to the given `Model`, by passing it to a default `JSONDecoder`. `Model` has to conform to `Codable`. The ContentType is fixed to "application/json".
-public struct JsonResourceCoder<Model: Codable>: ResourceCoder {
+/// This resource coder will encode the given `Model` using a default `JSONEncoder`.
+/// `Model` has to conform to `Encodable`.
+/// The ContentType is fixed to "application/json".
+public struct JsonResourceEncoder<Model: Encodable>: ResourceEncoder {
     public typealias Content = Model
 
     private let jsonEncoder = JSONEncoder()
-    private let jsonDecoder = JSONDecoder()
 
     public init() {}
 
@@ -70,7 +82,18 @@ public struct JsonResourceCoder<Model: Codable>: ResourceCoder {
             throw SchwiftyResourcesError.jsonEncodingFailed(error)
         }
     }
-    
+}
+
+
+/// This resource coder will decode the data to the given `Model`, by passing it to a default `JSONDecoder`.
+/// `Model` has to conform to `Decodable`.
+public struct JsonResourceDecoder<Model: Decodable>: ResourceDecoder {
+    public typealias Content = Model
+
+    private let jsonDecoder = JSONDecoder()
+
+    public init() {}
+
     public func decode(data: Data) throws -> Content {
         do {
             return try jsonDecoder.decode(Content.self, from: data)
@@ -80,6 +103,32 @@ public struct JsonResourceCoder<Model: Codable>: ResourceCoder {
     }
 }
 
+/// This resource coder will encode the given `Model` using a default `JSONEncoder` and decode the data to the given `Model`, by passing it to a default `JSONDecoder`.
+/// `Model` has to conform to `Codable`.
+/// The ContentType is fixed to "application/json".
+public struct JsonResourceCoder<Model: Codable>: ResourceCoder {
+    public typealias Content = Model
+    
+    private let jsonResourceEncoder = JsonResourceEncoder<Model>()
+    private let jsonResourceDecoder = JsonResourceDecoder<Model>()
+
+    public init() {}
+
+    public let contentType: String? = "application/json"
+
+    public func encode(content: Model) throws -> Data? {
+        return try jsonResourceEncoder.encode(content: content)
+    }
+    
+    public func decode(data: Data) throws -> Content {
+        return try jsonResourceDecoder.decode(data: data)
+    }
+}
+
+/// This resource coder will encode the given `Model` using a default `JSONEncoder` and decode the data to the given `Model`, by passing it to a default `JSONDecoder`.
+/// `Model` has to conform to `Codable`.
+/// The ContentType is fixed to "application/json".
+/// Additionally the data will be en- and decrypted using the given `Crypter`.
 public struct CryptedJsonResourceCoder<Model: Codable, Cryption: Crypter>: ResourceCoder {
     public typealias Content = Model
     
@@ -118,7 +167,8 @@ public struct CryptedJsonResourceCoder<Model: Codable, Cryption: Crypter>: Resou
     }
 }
 
-/// This resource coder will encode a `String` to UTF8 Data and decode from UTF8 Data to a `String`. The ContentType defaults to "text/plain" but can be set, if desired.
+/// This resource coder will encode a `String` to UTF8 Data and decode from UTF8 Data to a `String`.
+/// The ContentType defaults to "text/plain" but can be set, if desired.
 public struct StringResourceCoder: ResourceCoder {
     public typealias Content = String
 

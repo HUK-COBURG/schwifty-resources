@@ -153,7 +153,7 @@ public extension HttpResource {
 
         if let requestModifiers = requestModifiers {
             for requestModifier in requestModifiers {
-                urlRequest = try await requestModifier.modify(request: urlRequest, networkResource: self)
+                urlRequest = try await requestModifier.modify(request: urlRequest, httpResource: self)
             }
         }
 

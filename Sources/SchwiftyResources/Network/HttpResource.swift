@@ -178,6 +178,9 @@ public extension HttpResource {
 
         var newQueryItems: [URLQueryItem] = urlComponents.queryItems ?? []
         newQueryItems.append(contentsOf: queryItems ?? [])
+        newQueryItems.sort { lhs, rhs in
+            return lhs.name < rhs.name
+        }
         urlComponents.queryItems = newQueryItems.count > 0 ? newQueryItems : nil
 
         guard let composedUrl = urlComponents.url else {

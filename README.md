@@ -79,7 +79,7 @@ do {
 
 ### Writing and reading to and from the user defaults
 
-To write and read data to and from the user defaults you can create a `UserDefaultsResource`, defining the `ContentResourceCoder` and a key.
+To write data to and read from the user defaults you can create a `UserDefaultsResource`, defining the `ContentResourceCoder` and a key.
 
 ```swift
 import SchwiftyResources
@@ -108,8 +108,8 @@ do {
 
 ### Writing and reading to and from the sandbox
 
-To write and read data to and from the sandbox you can create a `SandboxResource`, defining the `ContentResourceCoder`, a location and the path (or just the file name).
-In this example the data, which is stored on the file system will be AES256 encrypted. The decrypted data though contains an encoded version of the `Rick` type.
+To write data to and read from the sandbox you can create a `SandboxResource`, defining the `ContentResourceCoder`, a location and the path (or just the file name).
+In this example the data, which is stored on the file system will be AES GCM encrypted. The decrypted data though contains an encoded version of the `Rick` type.
 
 ```swift
 import SchwiftyResources
@@ -121,17 +121,15 @@ struct Rick: Codable {
     let haircut: String
 }
 
-struct RicksKeyProvider: Aes256CrypterKeyProvider {
-    static func provideKey() -> Data {
+struct RicksKeyProvider: AesGcmCrypterKeyProvider {
+    static func provideKey() -> SymmetricKey {
         let password = "pAssW0rd#OF-the/c1Tad3l"
-        let passwordData = Data(password.utf8)
-        
-        return Data(SHA256.hash(data: passwordData))
+        return SymmetricKey(data: SHA256.hash(data: Data(password.utf8)))
     }
 }
 
 struct RicksSandboxResource: SandboxResource {
-    typealias ContentResourceCoder = CryptedJsonResourceCoder<[Rick], Aes256Crypter<RicksKeyProvider>>
+    typealias ContentResourceCoder = CryptedJsonResourceCoder<[Rick], AesGcmCrypter<RicksKeyProvider>>
     let location: SandboxLocation = .documents
     var path: String = "ricks.store"
 }

@@ -65,17 +65,15 @@ final class SchwiftyResourcesTests: XCTestCase {
             let haircut: String
         }
         
-        struct RicksKeyProvider: Aes256CrypterKeyProvider {
-            static func provideKey() -> Data {
+        struct RicksKeyProvider: AesGcmCrypterKeyProvider {
+            static func provideKey() -> SymmetricKey {
                 let password = "pAssW0rd#OF-the/c1Tad3l"
-                let passwordData = Data(password.utf8)
-                
-                return Data(SHA256.hash(data: passwordData))
+                return SymmetricKey(data: SHA256.hash(data: Data(password.utf8)))
             }
         }
         
         struct RicksSandboxResource: SandboxResource {
-            typealias ContentResourceCoder = CryptedJsonResourceCoder<[Rick], Aes256Crypter<RicksKeyProvider>>
+            typealias ContentResourceCoder = CryptedJsonResourceCoder<[Rick], AesGcmCrypter<RicksKeyProvider>>
             let location: SandboxLocation = .documents
             var path: String = "ricks.store"
         }

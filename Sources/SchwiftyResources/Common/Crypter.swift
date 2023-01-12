@@ -21,8 +21,8 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-import CommonCrypto
-import Foundation
+import struct Foundation.Data
+import CryptoKit
 
 /// Conform to this protocol to provide the ability to en- and decrypt data.
 /// This is currently used by `CryptedJsonResourceCoder`
@@ -31,111 +31,87 @@ public protocol Crypter {
     static func decrypt(data: Data) throws -> Data
 }
 
-/// Conform to this protocol to provide a valid en- and decryption key for the `Aes256Crypter`.
-public protocol Aes256CrypterKeyProvider {
-    static func provideKey() -> Data
+/// Conform to this protocol to provide a valid en- and decryption key for the `AesGcmCrypter`.
+public protocol AesGcmCrypterKeyProvider {
+    static func provideKey() -> SymmetricKey
 }
 
-/// This crypter will en- and decrypt data using AES256.
+/// This crypter will en- and decrypt data using AES GCM.
 /// You have to pass a key provider implementation.
-/// The IV is prefixed to the encrypted data.
-public struct Aes256Crypter<KeyProvider: Aes256CrypterKeyProvider>: Crypter {
+public struct AesGcmCrypter<KeyProvider: AesGcmCrypterKeyProvider>: Crypter {
     enum AesError: Error {
-        case keyError((String, Int))
-        case ivError((String, Int))
-        case cryptorError((String, Int))
+        case encryptionFailed(Error?)
+        case decryptionFailed(Error?)
     }
     
     public static func encrypt(data: Data) throws -> Data {
-        let keyData = KeyProvider.provideKey()
-        let keyLength = keyData.count
-        let validKeyLengths = [kCCKeySizeAES128, kCCKeySizeAES192, kCCKeySizeAES256]
-
-        guard validKeyLengths.contains(keyLength) else {
-            throw AesError.keyError(("Invalid key length", keyLength))
-        }
-
-        let ivSize = kCCBlockSizeAES128
-        let cryptLength = size_t(ivSize + data.count + kCCBlockSizeAES128)
-        var cryptData = Data(count: cryptLength)
-
-        let status = cryptData.withUnsafeMutableBytes { ivBytes in
-            SecRandomCopyBytes(kSecRandomDefault, kCCBlockSizeAES128, ivBytes.baseAddress!)
-        }
-
-        guard status == 0 else {
-            throw AesError.ivError(("IV generation failed", Int(status)))
-        }
-
-        var numBytesEncrypted: size_t = 0
-        let options = CCOptions(kCCOptionPKCS7Padding)
-
-        let cryptStatus = cryptData.withUnsafeMutableBytes { cryptBytes in
-            data.withUnsafeBytes { dataBytes in
-                keyData.withUnsafeBytes { keyBytes in
-                    CCCrypt(CCOperation(kCCEncrypt),
-                            CCAlgorithm(kCCAlgorithmAES),
-                            options,
-                            keyBytes.baseAddress, keyLength,
-                            cryptBytes.baseAddress,
-                            dataBytes.baseAddress, data.count,
-                            cryptBytes.baseAddress! + kCCBlockSizeAES128, cryptLength,
-                            &numBytesEncrypted)
-                }
+        let key = KeyProvider.provideKey()
+        
+        do {
+            let sealedBox = try AES.GCM.seal(data, using: key)
+            
+            guard let data = sealedBox.combined else {
+                throw AesError.encryptionFailed(nil)
+            }
+            
+            return data
+        } catch {
+            switch error {
+            case is AesError:
+                throw error
+            default:
+                throw AesError.encryptionFailed(error)
             }
         }
-
-        guard UInt32(cryptStatus) == UInt32(kCCSuccess) else {
-            throw AesError.cryptorError(("Encryption failed", Int(cryptStatus)))
-        }
-
-        cryptData.count = numBytesEncrypted + ivSize
-
-        return cryptData
     }
     
     public static func decrypt(data: Data) throws -> Data {
-        let keyData = KeyProvider.provideKey()
-        let keyLength = keyData.count
-        let validKeyLengths = [kCCKeySizeAES128, kCCKeySizeAES192, kCCKeySizeAES256]
-
-        guard validKeyLengths.contains(keyLength) else {
-            throw AesError.keyError(("Invalid key length", keyLength))
+        let key = KeyProvider.provideKey()
+        
+        do {
+            let sealedBox = try AES.GCM.SealedBox(combined: data)
+            let data = try AES.GCM.open(sealedBox, using: key)
+            
+            return data
+        } catch {
+            throw AesError.decryptionFailed(error)
         }
+    }
+}
 
-        let ivSize = kCCBlockSizeAES128
-        let clearLength = size_t(data.count - ivSize)
+/// Conform to this protocol to provide a valid en- and decryption key for the `ChaChaPolyCrypter`.
+public protocol ChaChaPolyCrypterKeyProvider {
+    static func provideKey() -> SymmetricKey
+}
 
-        guard clearLength > 0 else {
-            throw AesError.cryptorError(("Invalid data length", clearLength))
+/// This crypter will en- and decrypt data using Cha Cha Poly.
+/// You have to pass a key provider implementation.
+public struct ChaChaPolyCrypter<KeyProvider: ChaChaPolyCrypterKeyProvider>: Crypter {
+    enum ChaChaPolyError: Error {
+        case encryptionFailed(Error?)
+        case decryptionFailed(Error?)
+    }
+    
+    public static func encrypt(data: Data) throws -> Data {
+        let key = KeyProvider.provideKey()
+        
+        do {
+            let sealedBox = try ChaChaPoly.seal(data, using: key)
+            return sealedBox.combined
+        } catch {
+            throw ChaChaPolyError.encryptionFailed(error)
         }
-
-        var clearData = Data(count: clearLength)
-
-        var numBytesDecrypted: size_t = 0
-        let options = CCOptions(kCCOptionPKCS7Padding)
-
-        let cryptStatus = clearData.withUnsafeMutableBytes { cryptBytes in
-            data.withUnsafeBytes { dataBytes in
-                keyData.withUnsafeBytes { keyBytes in
-                    CCCrypt(CCOperation(kCCDecrypt),
-                            CCAlgorithm(kCCAlgorithmAES128),
-                            options,
-                            keyBytes.baseAddress, keyLength,
-                            dataBytes.baseAddress,
-                            dataBytes.baseAddress! + kCCBlockSizeAES128, clearLength,
-                            cryptBytes.baseAddress, clearLength,
-                            &numBytesDecrypted)
-                }
-            }
+    }
+    
+    public static func decrypt(data: Data) throws -> Data {
+        let key = KeyProvider.provideKey()
+        
+        do {
+            let sealedBox = try ChaChaPoly.SealedBox(combined: data)
+            let data = try ChaChaPoly.open(sealedBox, using: key)
+            return data
+        } catch {
+            throw ChaChaPolyError.decryptionFailed(error)
         }
-
-        guard UInt32(cryptStatus) == UInt32(kCCSuccess) else {
-            throw AesError.cryptorError(("Decryption failed", Int(cryptStatus)))
-        }
-
-        clearData.count = numBytesDecrypted
-
-        return clearData
     }
 }

@@ -48,6 +48,8 @@ public enum SchwiftyResourcesError: Error {
     case cannotReadFile(Error)
     /// The file could not be written to the disk. Check the associated error for further information.
     case cannotWriteFile(Error)
+    /// The file could not be deleted from the disk. Check the associated error for further information.
+    case cannotDeleteFile(Error)
     /// The defined sandbox location does not exist.
     case sandboxLocationUnavailable
     /// An error occurred while decrypting the data. Check the associated error for further information.

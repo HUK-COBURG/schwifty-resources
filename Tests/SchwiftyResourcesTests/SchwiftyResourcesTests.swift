@@ -35,9 +35,9 @@ final class SchwiftyResourcesTests: XCTestCase {
         let resource = StringUserDefaultsResource()
         
         let valueToWrite = "Just a simple string."
-        try await resource.write(content: "Just a simple string.")
+        try resource.write(content: "Just a simple string.")
 
-        let readValue = try await resource.read()
+        let readValue = try resource.read()
         
         XCTAssertEqual(valueToWrite, readValue)
     }

@@ -34,9 +34,11 @@ public protocol UserDefaultsResource {
     /// The key of the resource.
     var key: String { get }
     /// Will try to get the data with the given key and decode it with the content resource coder.
-    func read() async throws -> ContentResourceCoder.Content?
+    func read() throws -> ContentResourceCoder.Content?
     /// Will try to encode the content using the content resource coder and write it with the given key.
-    func write(content: ContentResourceCoder.Content?) async throws
+    func write(content: ContentResourceCoder.Content?) throws
+    /// Will try to remove the item from user defaults with the given key.
+    func delete()
 }
 
 public extension UserDefaultsResource {
@@ -48,7 +50,7 @@ public extension UserDefaultsResource {
         return UserDefaults.standard
     }
     
-    func read() async throws -> ContentResourceCoder.Content? {
+    func read() throws -> ContentResourceCoder.Content? {
         guard let data = userDefaults.data(forKey: key) else {
             return nil
         }
@@ -58,7 +60,7 @@ public extension UserDefaultsResource {
         return content
     }
     
-    func write(content: ContentResourceCoder.Content?) async throws {
+    func write(content: ContentResourceCoder.Content?) throws {
         guard let content = content else {
             userDefaults.set(nil, forKey: key)
             return
@@ -66,5 +68,9 @@ public extension UserDefaultsResource {
         
         let data = try contentResourceCoder.encode(content: content)
         userDefaults.set(data, forKey: key)
+    }
+    
+    func delete() {
+        userDefaults.removeObject(forKey: key)
     }
 }

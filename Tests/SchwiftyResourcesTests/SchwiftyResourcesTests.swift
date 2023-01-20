@@ -35,9 +35,9 @@ final class SchwiftyResourcesTests: XCTestCase {
         let resource = StringUserDefaultsResource()
         
         let valueToWrite = "Just a simple string."
-        try await resource.write(content: "Just a simple string.")
+        try resource.write(content: "Just a simple string.")
 
-        let readValue = try await resource.read()
+        let readValue = try resource.read()
         
         XCTAssertEqual(valueToWrite, readValue)
     }
@@ -75,7 +75,7 @@ final class SchwiftyResourcesTests: XCTestCase {
         struct RicksSandboxResource: SandboxResource {
             typealias ContentResourceCoder = CryptedJsonResourceCoder<[Rick], AesGcmCrypter<RicksKeyProvider>>
             let location: SandboxLocation = .documents
-            var path: String = "ricks.store"
+            var path: String = "ricks/ricks.store"
         }
 
         let resource = RicksSandboxResource()

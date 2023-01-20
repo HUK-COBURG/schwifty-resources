@@ -24,6 +24,7 @@
 import class Foundation.Bundle
 import struct Foundation.Data
 import struct Foundation.URL
+import class Foundation.FileManager
 
 public protocol FileResource {
     /// The type of the content resource coder. Must conform to `ResourceCoder`.
@@ -37,6 +38,8 @@ public protocol FileResource {
     func read() async throws -> ContentResourceCoder.Content
     /// Will try to encode the content using the content resource coder and write it to the given url.
     func write(content: ContentResourceCoder.Content) async throws
+    /// Will try to remove the item from the file system at the given url.
+    func delete() async throws
 }
 
 public extension FileResource {
@@ -70,9 +73,22 @@ public extension FileResource {
         let data = try contentResourceCoder.encode(content: content)
         
         do {
+            let directoryUrl = url.deletingLastPathComponent()
+            try FileManager.default.createDirectory(at: directoryUrl, withIntermediateDirectories: true)
+            
             try (data ?? Data()).write(to: url)
         } catch {
-            throw SchwiftyResourcesError.cannotReadFile(error)
+            throw SchwiftyResourcesError.cannotWriteFile(error)
+        }
+    }
+    
+    func delete() async throws {
+        let url = try await self.url
+        
+        do {
+            try FileManager.default.removeItem(at: url)
+        } catch {
+            throw SchwiftyResourcesError.cannotWriteFile(error)
         }
     }
 }

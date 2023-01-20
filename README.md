@@ -92,13 +92,13 @@ struct PropertyUserDefaultsResource: UserDefaultsResource {
 let resource = PropertyUserDefaultsResource()
 
 do {
-    try await resource.write(content: "Just a simple string.")
+    try resource.write(content: "Just a simple string.")
 } catch {
     print(error)
 }
 
 do {
-    let value = try await resource.read()
+    let value = try resource.read()
     print(value)
 } catch {
     print(error)

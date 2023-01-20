@@ -73,6 +73,9 @@ public extension FileResource {
         let data = try contentResourceCoder.encode(content: content)
         
         do {
+            let directoryUrl = url.deletingLastPathComponent()
+            try FileManager.default.createDirectory(at: directoryUrl, withIntermediateDirectories: true)
+            
             try (data ?? Data()).write(to: url)
         } catch {
             throw SchwiftyResourcesError.cannotWriteFile(error)

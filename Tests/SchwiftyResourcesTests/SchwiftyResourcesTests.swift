@@ -75,7 +75,7 @@ final class SchwiftyResourcesTests: XCTestCase {
         struct RicksSandboxResource: SandboxResource {
             typealias ContentResourceCoder = CryptedJsonResourceCoder<[Rick], AesGcmCrypter<RicksKeyProvider>>
             let location: SandboxLocation = .documents
-            var path: String = "ricks.store"
+            var path: String = "ricks/ricks.store"
         }
 
         let resource = RicksSandboxResource()

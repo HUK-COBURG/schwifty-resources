@@ -79,6 +79,45 @@ public struct DataResourceCoder: ResourceCoder {
     }
 }
 
+/// This resource coder will just pass through the data.
+/// The ContentType is fixed to "application/octet-stream".
+/// Additionally the data will be en- and decrypted using the given `Crypter`.
+public struct CryptedDataResourceCoder<Cryption: Crypter>: ResourceCoder {
+    public typealias Content = Data
+    
+    let dataResourceCoder = DataResourceCoder()
+    
+    public init() {}
+    
+    public let contentType: String? = "application/octet-stream"
+
+    public func encode(content: Data) throws -> Data? {
+        let data = try dataResourceCoder.encode(content: content)
+        
+        do {
+            return try Cryption.encrypt(data: data ?? Data())
+        } catch {
+            throw SchwiftyResourcesError.encryptionFailed(error)
+        }
+    }
+    
+    public func decode(data: Data) throws -> Data {
+        var decryptedData: Data? = nil
+        
+        do {
+            decryptedData = try Cryption.decrypt(data: data)
+        } catch {
+            throw SchwiftyResourcesError.decryptionFailed(error)
+        }
+        
+        guard let decryptedData = decryptedData else {
+            throw SchwiftyResourcesError.decryptionFailed(nil)
+        }
+        
+        return try dataResourceCoder.decode(data: decryptedData)
+    }
+}
+
 /// This resource coder will encode the given `Model` using a default `JSONEncoder`.
 /// `Model` has to conform to `Encodable`.
 /// The ContentType is fixed to "application/json".
@@ -143,7 +182,7 @@ public struct JsonResourceCoder<Model: Codable>: ResourceCoder {
 
 /// This resource coder will encode the given `Model` using a default `JSONEncoder` and decode the data to the given `Model`, by passing it to a default `JSONDecoder`.
 /// `Model` has to conform to `Codable`.
-/// The ContentType is fixed to "application/json".
+/// The ContentType is fixed to "application/octet-stream".
 /// Additionally the data will be en- and decrypted using the given `Crypter`.
 public struct CryptedJsonResourceCoder<Model: Codable, Cryption: Crypter>: ResourceCoder {
     public typealias Content = Model
@@ -158,8 +197,7 @@ public struct CryptedJsonResourceCoder<Model: Codable, Cryption: Crypter>: Resou
         let jsonData = try jsonResourceCoder.encode(content: content)
         
         do {
-            let data = try Cryption.encrypt(data: jsonData ?? Data())
-            return data
+            return try Cryption.encrypt(data: jsonData ?? Data())
         } catch {
             throw SchwiftyResourcesError.encryptionFailed(error)
         }
@@ -178,8 +216,7 @@ public struct CryptedJsonResourceCoder<Model: Codable, Cryption: Crypter>: Resou
             throw SchwiftyResourcesError.decryptionFailed(nil)
         }
         
-        let content = try jsonResourceCoder.decode(data: jsonData)
-        return content
+        return try jsonResourceCoder.decode(data: jsonData)
     }
 }
 

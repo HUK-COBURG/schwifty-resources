@@ -80,7 +80,7 @@ public struct DataResourceCoder: ResourceCoder {
 }
 
 /// This resource coder will just pass through the data.
-/// The ContentType has to be set.
+/// The ContentType is fixed to "application/octet-stream".
 /// Additionally the data will be en- and decrypted using the given `Crypter`.
 public struct CryptedDataResourceCoder<Cryption: Crypter>: ResourceCoder {
     public typealias Content = Data
@@ -89,8 +89,8 @@ public struct CryptedDataResourceCoder<Cryption: Crypter>: ResourceCoder {
     
     public init() {}
     
-    public var contentType: String?
-    
+    public let contentType: String? = "application/octet-stream"
+
     public func encode(content: Data) throws -> Data? {
         let data = try dataResourceCoder.encode(content: content)
         
@@ -184,7 +184,7 @@ public struct JsonResourceCoder<Model: Codable>: ResourceCoder {
 
 /// This resource coder will encode the given `Model` using a default `JSONEncoder` and decode the data to the given `Model`, by passing it to a default `JSONDecoder`.
 /// `Model` has to conform to `Codable`.
-/// The ContentType is fixed to "application/json".
+/// The ContentType is fixed to "application/octet-stream".
 /// Additionally the data will be en- and decrypted using the given `Crypter`.
 public struct CryptedJsonResourceCoder<Model: Codable, Cryption: Crypter>: ResourceCoder {
     public typealias Content = Model

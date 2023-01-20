@@ -95,8 +95,7 @@ public struct CryptedDataResourceCoder<Cryption: Crypter>: ResourceCoder {
         let data = try dataResourceCoder.encode(content: content)
         
         do {
-            let encryptedData = try Cryption.encrypt(data: data ?? Data())
-            return encryptedData
+            return try Cryption.encrypt(data: data ?? Data())
         } catch {
             throw SchwiftyResourcesError.encryptionFailed(error)
         }
@@ -115,8 +114,7 @@ public struct CryptedDataResourceCoder<Cryption: Crypter>: ResourceCoder {
             throw SchwiftyResourcesError.decryptionFailed(nil)
         }
         
-        let content = try dataResourceCoder.decode(data: decryptedData)
-        return content
+        return try dataResourceCoder.decode(data: decryptedData)
     }
 }
 
@@ -199,8 +197,7 @@ public struct CryptedJsonResourceCoder<Model: Codable, Cryption: Crypter>: Resou
         let jsonData = try jsonResourceCoder.encode(content: content)
         
         do {
-            let data = try Cryption.encrypt(data: jsonData ?? Data())
-            return data
+            return try Cryption.encrypt(data: jsonData ?? Data())
         } catch {
             throw SchwiftyResourcesError.encryptionFailed(error)
         }
@@ -219,8 +216,7 @@ public struct CryptedJsonResourceCoder<Model: Codable, Cryption: Crypter>: Resou
             throw SchwiftyResourcesError.decryptionFailed(nil)
         }
         
-        let content = try jsonResourceCoder.decode(data: jsonData)
-        return content
+        return try jsonResourceCoder.decode(data: jsonData)
     }
 }
 

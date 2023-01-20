@@ -79,6 +79,47 @@ public struct DataResourceCoder: ResourceCoder {
     }
 }
 
+/// This resource coder will just pass through the data.
+/// The ContentType has to be set.
+/// Additionally the data will be en- and decrypted using the given `Crypter`.
+public struct CryptedDataResourceCoder<Cryption: Crypter>: ResourceCoder {
+    public typealias Content = Data
+    
+    let dataResourceCoder = DataResourceCoder()
+    
+    public init() {}
+    
+    public var contentType: String?
+    
+    public func encode(content: Data) throws -> Data? {
+        let data = try dataResourceCoder.encode(content: content)
+        
+        do {
+            let encryptedData = try Cryption.encrypt(data: data ?? Data())
+            return encryptedData
+        } catch {
+            throw SchwiftyResourcesError.encryptionFailed(error)
+        }
+    }
+    
+    public func decode(data: Data) throws -> Data {
+        var decryptedData: Data? = nil
+        
+        do {
+            decryptedData = try Cryption.decrypt(data: data)
+        } catch {
+            throw SchwiftyResourcesError.decryptionFailed(error)
+        }
+        
+        guard let decryptedData = decryptedData else {
+            throw SchwiftyResourcesError.decryptionFailed(nil)
+        }
+        
+        let content = try dataResourceCoder.decode(data: decryptedData)
+        return content
+    }
+}
+
 /// This resource coder will encode the given `Model` using a default `JSONEncoder`.
 /// `Model` has to conform to `Encodable`.
 /// The ContentType is fixed to "application/json".

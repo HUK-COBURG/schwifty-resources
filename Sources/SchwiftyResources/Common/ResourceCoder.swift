@@ -241,3 +241,39 @@ public struct StringResourceCoder: ResourceCoder {
         return string
     }
 }
+
+/// This resource coder will encode an `Int` to Data and decode from Data to an `Int`.
+/// The ContentType defaults to "application/octet-stream" but can be set, if desired.
+public struct IntegerResourceCoder: ResourceCoder {
+    public typealias Content = Int
+
+    public init() {}
+
+    public var contentType: String? = "application/octet-stream"
+
+    public func encode(content: Content) throws -> Data? {
+        return withUnsafeBytes(of: content) { Data($0) }
+    }
+
+    public func decode(data: Data) throws -> Content {
+        return data.withUnsafeBytes { $0.load(as: Int.self) }
+    }
+}
+
+/// This resource coder will encode a `Bool` to Data and decode from Data to a `Bool`.
+/// The ContentType defaults to "application/octet-stream" but can be set, if desired.
+public struct BooleanResourceCoder: ResourceCoder {
+    public typealias Content = Bool
+
+    public init() {}
+
+    public var contentType: String? = "application/octet-stream"
+
+    public func encode(content: Content) throws -> Data? {
+        return withUnsafeBytes(of: content) { Data($0) }
+    }
+
+    public func decode(data: Data) throws -> Content {
+        return data.withUnsafeBytes { $0.load(as: Bool.self) }
+    }
+}

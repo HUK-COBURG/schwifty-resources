@@ -50,6 +50,8 @@ public enum SchwiftyResourcesError: Error {
     case cannotWriteFile(Error)
     /// The file could not be deleted from the disk. Check the associated error for further information.
     case cannotDeleteFile(Error)
+    /// The file could not be written to the disk, because there is no disk space left. Check the associated error for further information.
+    case outOfDiskSpace(Error)
     /// The defined sandbox location does not exist.
     case sandboxLocationUnavailable
     /// An error occurred while decrypting the data. Check the associated error for further information.

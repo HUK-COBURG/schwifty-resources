@@ -21,10 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-import class Foundation.Bundle
-import struct Foundation.Data
-import struct Foundation.URL
-import class Foundation.FileManager
+import Foundation
 
 public protocol FileResource {
     /// The type of the content resource coder. Must conform to `ResourceCoder`.
@@ -78,7 +75,13 @@ public extension FileResource {
             
             try (data ?? Data()).write(to: url)
         } catch {
-            throw SchwiftyResourcesError.cannotWriteFile(error)
+            let nsError = error as NSError
+            
+            if nsError.domain == NSCocoaErrorDomain && nsError.code == NSFileWriteOutOfSpaceError {
+                throw SchwiftyResourcesError.outOfDiskSpace(error)
+            } else {
+                throw SchwiftyResourcesError.cannotWriteFile(error)
+            }
         }
     }
     
@@ -88,7 +91,7 @@ public extension FileResource {
         do {
             try FileManager.default.removeItem(at: url)
         } catch {
-            throw SchwiftyResourcesError.cannotWriteFile(error)
+            throw SchwiftyResourcesError.cannotDeleteFile(error)
         }
     }
 }

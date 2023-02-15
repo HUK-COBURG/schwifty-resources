@@ -1,5 +1,6 @@
-<img alt="FoundationDB logo" src="Logo.png?raw=true" height="150">
+<img alt="FoundationDB logo" src="Logo.png?raw=true" height="200">
 ---
+
 [![Swift](https://github.com/HUK-COBURG/schwifty-resources/actions/workflows/swift.yml/badge.svg)](https://github.com/HUK-COBURG/schwifty-resources/actions/workflows/swift.yml)
 
 With `schwifty-resources` you get a schwifty way of reading and writing data.

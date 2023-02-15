@@ -1,4 +1,6 @@
-# schwifty-resources
+<img alt="FoundationDB logo" src="Logo.png?raw=true" height="200">
+
+---
 
 [![Swift](https://github.com/HUK-COBURG/schwifty-resources/actions/workflows/swift.yml/badge.svg)](https://github.com/HUK-COBURG/schwifty-resources/actions/workflows/swift.yml)
 

@@ -41,7 +41,7 @@ public enum SchwiftyResourcesError: Error {
     /// A secure connection could not be established. Check the associated error for further information.
     case secureConnectionFailed(Error)
     /// The HTTP status code in the response was not between 200 and 299. You can check the associated `HttpStatus` for the returned status.
-    case httpStatus(HttpStatus)
+    case httpStatus(HttpStatus, String?)
     /// The file was not found in the given bundle.
     case fileNotFound
     /// The file could not be read from the disk. Check the associated error for further information.

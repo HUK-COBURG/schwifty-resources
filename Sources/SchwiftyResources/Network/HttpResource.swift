@@ -99,7 +99,7 @@ public extension HttpResource {
                     }
 
                     guard httpUrlResponse.statusCode >= 200, httpUrlResponse.statusCode < 300 else {
-                        throw SchwiftyResourcesError.httpStatus(httpUrlResponse.httpStatus)
+                        throw SchwiftyResourcesError.httpStatus(httpUrlResponse.httpStatus, String(data: data, encoding: .utf8))
                     }
 
                     return try Response(httpUrlResponse: httpUrlResponse, data: data)

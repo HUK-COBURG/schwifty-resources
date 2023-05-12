@@ -31,6 +31,8 @@ public protocol FileResource {
     var contentResourceCoder: ContentResourceCoder { get }
     /// The URL of the resource.
     var url: URL { get async throws }
+    /// The protection mode of the item on the file system
+    var protection: FileResourceProtection { get }
     /// Will try to get the data from the given url and decode it with the content resource coder.
     func read() async throws -> ContentResourceCoder.Content
     /// Will try to encode the content using the content resource coder and write it to the given url.
@@ -44,6 +46,10 @@ public extension FileResource {
         ContentResourceCoder()
     }
 
+    var protection: FileResourceProtection {
+        return .completeUntilFirstUserAuthentication
+    }
+    
     func read() async throws -> ContentResourceCoder.Content {
         let url = try await self.url
 
@@ -73,7 +79,7 @@ public extension FileResource {
             let directoryUrl = url.deletingLastPathComponent()
             try FileManager.default.createDirectory(at: directoryUrl, withIntermediateDirectories: true)
             
-            try (data ?? Data()).write(to: url)
+            try (data ?? Data()).write(to: url, options: protection.writingOptions)
         } catch {
             let nsError = error as NSError
             
@@ -92,6 +98,30 @@ public extension FileResource {
             try FileManager.default.removeItem(at: url)
         } catch {
             throw SchwiftyResourcesError.cannotDeleteFile(error)
+        }
+    }
+}
+
+public enum FileResourceProtection {
+    /// The file is stored in an encrypted format on disk and cannot be read from or written to while the device is locked or booting.
+    case complete
+    /// The file is stored in an encrypted format on disk after it is closed.
+    case completeUnlessOpen
+    /// The file is stored in an encrypted format on disk and cannot be accessed until after the device has booted.
+    case completeUntilFirstUserAuthentication
+    /// The file has no special protections associated with it.
+    case none
+    
+    fileprivate var writingOptions: Data.WritingOptions {
+        switch self {
+        case .complete:
+            return .completeFileProtection
+        case .completeUnlessOpen:
+            return .completeFileProtectionUnlessOpen
+        case .completeUntilFirstUserAuthentication:
+            return .completeFileProtectionUntilFirstUserAuthentication
+        case .none:
+            return .noFileProtection
         }
     }
 }

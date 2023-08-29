@@ -43,7 +43,7 @@ public struct ParametersPathModifier: PathModifier {
                 continue
             }
 
-            modifiedPath = modifiedPath.replacingOccurrences(of: "{\(key)}", with: value)
+            modifiedPath = modifiedPath.replacingOccurrences(of: "(\(key))", with: value)
         }
 
         return modifiedPath

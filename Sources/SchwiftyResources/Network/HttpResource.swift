@@ -173,12 +173,14 @@ public extension HttpResource {
 
         let queryItems = requestQuery?.keys.map { key in
             let value = requestQuery?[key]
-            return URLQueryItem(name: key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key,
-                                value: value?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed))
+            return URLQueryItem(name: key, value: value)
         }
 
-        var newQueryItems: [URLQueryItem] = urlComponents.percentEncodedQueryItems ?? []
-        newQueryItems.append(contentsOf: queryItems ?? [])
+        var newQueryItems = urlComponents.percentEncodedQueryItems ?? []
+        
+        urlComponents.queryItems = queryItems
+        
+        newQueryItems.append(contentsOf: urlComponents.percentEncodedQueryItems ?? [])
         newQueryItems.sort { lhs, rhs in
             return lhs.name < rhs.name
         }

@@ -173,7 +173,8 @@ public extension HttpResource {
 
         let queryItems = requestQuery?.keys.map { key in
             let value = requestQuery?[key]
-            return URLQueryItem(name: key, value: value)
+            return URLQueryItem(name: key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key,
+                                value: value?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed))
         }
 
         var newQueryItems: [URLQueryItem] = urlComponents.percentEncodedQueryItems ?? []

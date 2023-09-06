@@ -97,7 +97,7 @@ final class SchwiftyResourcesTests: XCTestCase {
             let url: URL
         }
         
-        let url = URL(string: "https://www.citadel.org?rick=c-137&morty=%2F")!
+        let url = URL(string: "https://www.citadel.org?morty=%2F&rick=c-137")!
         let resource = UrlSampleResource(url: url)
         let builtUrl = try await resource.buildUrl()
         

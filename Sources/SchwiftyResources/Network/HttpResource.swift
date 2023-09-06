@@ -133,9 +133,9 @@ public extension HttpResource {
         return nil
     }
 
-    // MARK: - Private functions
+    // MARK: - Internal functions
 
-    private func buildUrlRequest() async throws -> URLRequest {
+    internal func buildUrlRequest() async throws -> URLRequest {
         let url = try await buildUrl()
 
         var urlRequest = URLRequest(url: url)
@@ -160,7 +160,7 @@ public extension HttpResource {
         return urlRequest
     }
 
-    private func buildUrl() async throws -> URL {
+    internal func buildUrl() async throws -> URL {
         let url = try await self.url
 
         guard var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
@@ -176,12 +176,12 @@ public extension HttpResource {
             return URLQueryItem(name: key, value: value)
         }
 
-        var newQueryItems: [URLQueryItem] = urlComponents.queryItems ?? []
+        var newQueryItems: [URLQueryItem] = urlComponents.percentEncodedQueryItems ?? []
         newQueryItems.append(contentsOf: queryItems ?? [])
         newQueryItems.sort { lhs, rhs in
             return lhs.name < rhs.name
         }
-        urlComponents.queryItems = newQueryItems.count > 0 ? newQueryItems : nil
+        urlComponents.percentEncodedQueryItems = newQueryItems.count > 0 ? newQueryItems : nil
 
         guard let composedUrl = urlComponents.url else {
             throw SchwiftyResourcesError.urlBroken

@@ -88,4 +88,19 @@ final class SchwiftyResourcesTests: XCTestCase {
         
         XCTAssertEqual(ricksToWrite, readRicks)
     }
+    
+    func testUrlBuilding() async throws {
+        struct UrlSampleResource: HttpResource {
+            typealias RequestBodyResourceEncoder = EmptyResourceCoder
+            typealias ResponseBodyResourceDecoder = EmptyResourceCoder
+            
+            let url: URL
+        }
+        
+        let url = URL(string: "https://www.citadel.org?rick=c-137&morty=%2F")!
+        let resource = UrlSampleResource(url: url)
+        let builtUrl = try await resource.buildUrl()
+        
+        XCTAssertEqual(url, builtUrl)
+    }
 }

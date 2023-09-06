@@ -94,13 +94,13 @@ final class SchwiftyResourcesTests: XCTestCase {
             typealias RequestBodyResourceEncoder = EmptyResourceCoder
             typealias ResponseBodyResourceDecoder = EmptyResourceCoder
             
-            let url: URL
+            let requestQuery: [String : String]? = ["summer": "&"]
+            let url: URL = URL(string: "https://www.citadel.org?morty=%2F&rick=c-137")!
         }
         
-        let url = URL(string: "https://www.citadel.org?morty=%2F&rick=c-137")!
-        let resource = UrlSampleResource(url: url)
+        let resource = UrlSampleResource()
         let builtUrl = try await resource.buildUrl()
         
-        XCTAssertEqual(url, builtUrl)
+        XCTAssertEqual(builtUrl, URL(string: "https://www.citadel.org?morty=%2F&rick=c-137&summer=%26")!)
     }
 }

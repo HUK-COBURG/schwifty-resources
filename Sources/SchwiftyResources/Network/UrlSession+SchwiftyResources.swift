@@ -23,6 +23,8 @@
 
 import Foundation
 
+typealias MetricsHandler = (URLSessionTaskMetrics) -> Void
+
 extension URLSession {
     private static var schwiftyResourcesUrlSessionDelegate = SchwiftyResourcesUrlSessionDelegate()
     static var schwiftyResourcesUrlSession = URLSession(configuration: .default,
@@ -37,9 +39,9 @@ extension URLSession {
     /// - Parameter sendProgressHandler: An optional closure for handling send progress updates.
     /// - Parameter receiveProgressHandler: An optional closure for handling receive progress updates. Will be called every kilobyte of received data.
     /// - Returns: Data and response.
-    func data(for request: URLRequest, sendProgressHandler: ProgressHandler?, receiveProgressHandler: ProgressHandler?) async throws -> (Data, URLResponse) {
-        if #available(iOS 15.0, *), sendProgressHandler != nil || receiveProgressHandler != nil {
-            let delegateHandler = URLSessionTaskDelegateHandler(sendProgressHandler: sendProgressHandler)
+    func data(for request: URLRequest, sendProgressHandler: ProgressHandler?, receiveProgressHandler: ProgressHandler?, metricsHandler: MetricsHandler?) async throws -> (Data, URLResponse) {
+        if #available(iOS 15.0, *), sendProgressHandler != nil || receiveProgressHandler != nil || metricsHandler != nil {
+            let delegateHandler = URLSessionTaskDelegateHandler(sendProgressHandler: sendProgressHandler, metricsHandler: metricsHandler)
             let (bytes, response) = try await bytes(for: request, delegate: delegateHandler)
 
             let countOfBytesExpectedToReceive = bytes.task.countOfBytesExpectedToReceive
@@ -96,9 +98,11 @@ private class SchwiftyResourcesUrlSessionDelegate: NSObject, URLSessionDelegate 
 
 private class URLSessionTaskDelegateHandler: NSObject, URLSessionTaskDelegate {
     let sendProgressHandler: ProgressHandler?
+    let metricsHandler: MetricsHandler?
 
-    init(sendProgressHandler: ProgressHandler?) {
+    init(sendProgressHandler: ProgressHandler?, metricsHandler: MetricsHandler?) {
         self.sendProgressHandler = sendProgressHandler
+        self.metricsHandler = metricsHandler
     }
 
     func urlSession(_: URLSession, task _: URLSessionTask, didSendBodyData _: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
@@ -112,5 +116,9 @@ private class URLSessionTaskDelegateHandler: NSObject, URLSessionTaskDelegate {
 
     func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         session.delegate?.urlSession?(session, didReceive: challenge, completionHandler: completionHandler)
+    }
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+        metricsHandler?(metrics)
     }
 }

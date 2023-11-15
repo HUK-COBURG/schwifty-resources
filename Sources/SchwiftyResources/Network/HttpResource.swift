@@ -53,6 +53,7 @@ public protocol HttpResource {
     var sendProgressHandler: ProgressHandler? { get }
     /// This handler will be called whenever the responses progress is evolving. This handler will only be called on iOS 15 and above. Defaults to nil.
     var receiveProgressHandler: ProgressHandler? { get }
+    var urlSessionInformationHandler: UrlSessionInformationHandling? { get }
 }
 
 public extension HttpResource {
@@ -88,11 +89,20 @@ public extension HttpResource {
         get async throws {
             let urlRequest = try await buildUrlRequest()
 
+            let identifier = UUID().uuidString
+            
             do {
+                urlSessionInformationHandler?.willStart(request: urlRequest, identifier: identifier)
+                
                 let (data, urlResponse) = try await URLSession.schwiftyResourcesUrlSession.data(for: urlRequest,
                                                                                                 sendProgressHandler: sendProgressHandler,
-                                                                                                receiveProgressHandler: receiveProgressHandler)
-
+                                                                                                receiveProgressHandler: receiveProgressHandler,
+                                                                                                metricsHandler: { metrics in
+                    urlSessionInformationHandler?.didCollectMetrics(metrics, identifier: identifier)
+                })
+                
+                urlSessionInformationHandler?.didSucceed(response: urlResponse, data: data, identifier: identifier)
+                
                 do {
                     guard let httpUrlResponse = urlResponse as? HTTPURLResponse else {
                         throw SchwiftyResourcesError.wrongResponse
@@ -107,6 +117,8 @@ public extension HttpResource {
                     throw ErrorWrapper.wrapped(error)
                 }
             } catch {
+                urlSessionInformationHandler?.didFail(error: error, identifier: identifier)
+
                 if (error as NSError).code == NSURLErrorCancelled {
                     throw SchwiftyResourcesError.cancelled(error)
                 } else if (error as NSError).code == NSURLErrorTimedOut {
@@ -130,6 +142,10 @@ public extension HttpResource {
     }
 
     var receiveProgressHandler: ProgressHandler? {
+        return nil
+    }
+    
+    var urlSessionInformationHandler: UrlSessionInformationHandling? {
         return nil
     }
 

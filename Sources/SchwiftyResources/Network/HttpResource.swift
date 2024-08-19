@@ -53,7 +53,7 @@ public protocol HttpResource {
     var sendProgressHandler: ProgressHandler? { get }
     /// This handler will be called whenever the responses progress is evolving. This handler will only be called on iOS 15 and above. Defaults to nil.
     var receiveProgressHandler: ProgressHandler? { get }
-    /// The URLSessionConfiguration used for SchwiftyResourcesUrlSession
+    /// The URLSessionConfiguration used for SchwiftyResourcesUrlSession.
     var urlSessionConfiguration: URLSessionConfiguration { get }
 }
 

@@ -53,6 +53,8 @@ public protocol HttpResource {
     var sendProgressHandler: ProgressHandler? { get }
     /// This handler will be called whenever the responses progress is evolving. This handler will only be called on iOS 15 and above. Defaults to nil.
     var receiveProgressHandler: ProgressHandler? { get }
+    /// The URLSessionConfiguration used for SchwiftyResourcesUrlSession
+    var urlSessionConfiguration: URLSessionConfiguration { get }
 }
 
 public extension HttpResource {
@@ -89,9 +91,9 @@ public extension HttpResource {
             let urlRequest = try await buildUrlRequest()
 
             do {
-                let (data, urlResponse) = try await URLSession.schwiftyResourcesUrlSession.data(for: urlRequest,
-                                                                                                sendProgressHandler: sendProgressHandler,
-                                                                                                receiveProgressHandler: receiveProgressHandler)
+                let (data, urlResponse) = try await URLSession
+                    .makeSchwiftyResourcesUrlSession(with: urlSessionConfiguration)
+                    .data(for: urlRequest, sendProgressHandler: sendProgressHandler, receiveProgressHandler: receiveProgressHandler)
 
                 do {
                     guard let httpUrlResponse = urlResponse as? HTTPURLResponse else {
@@ -131,6 +133,10 @@ public extension HttpResource {
 
     var receiveProgressHandler: ProgressHandler? {
         return nil
+    }
+    
+    var urlSessionConfiguration: URLSessionConfiguration {
+        .default
     }
 
     // MARK: - Internal functions

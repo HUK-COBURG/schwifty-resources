@@ -25,10 +25,11 @@ import Foundation
 
 extension URLSession {
     private static var schwiftyResourcesUrlSessionDelegate = SchwiftyResourcesUrlSessionDelegate()
-    static var schwiftyResourcesUrlSession = URLSession(configuration: .default,
-                                                    delegate: schwiftyResourcesUrlSessionDelegate,
-                                                    delegateQueue: nil)
-
+    
+    internal static func makeSchwiftyResourcesUrlSession(with configuration: URLSessionConfiguration) -> URLSession {
+        URLSession(configuration: configuration, delegate: schwiftyResourcesUrlSessionDelegate, delegateQueue: nil)
+    }
+    
     /// Convenience method to load data using an URLRequest.
     /// If using iOS 15 and above the given `sendProgressHandler` and `receiveProgressHandler` will be called while sending and receiving.
     /// Internally either `bytes(for:delegate)` (>= iOS 15) or `data(for:)` will be used.

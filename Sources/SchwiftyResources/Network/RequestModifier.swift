@@ -24,7 +24,7 @@
 import struct Foundation.URLRequest
 
 /// Conform to this protocol and add it to the `requestModifiers` of a `HttpResource` to be able to manipulate the request, before sending it.
-public protocol RequestModifier {
+public protocol RequestModifier: Sendable {
     func modify(request: URLRequest, httpResource: any HttpResource) async throws -> URLRequest
 }
 

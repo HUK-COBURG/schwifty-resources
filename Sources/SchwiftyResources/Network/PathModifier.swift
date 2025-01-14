@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 
 /// Conform to this type to manipulate the path of a URL.
-public protocol PathModifier {
+public protocol PathModifier: Sendable {
     /// This function will be called before the request is sent. Return the modified path, which should replace the path before.
     func modify(path: String) -> String
 }

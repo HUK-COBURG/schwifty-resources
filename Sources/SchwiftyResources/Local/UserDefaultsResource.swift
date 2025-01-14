@@ -23,7 +23,7 @@
 
 import class Foundation.UserDefaults
 
-public protocol UserDefaultsResource {
+public protocol UserDefaultsResource: Sendable {
     /// The type of the content resource coder. Must conform to `ResourceCoder`.
     associatedtype ContentResourceCoder: ResourceCoder
 

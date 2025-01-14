@@ -23,7 +23,7 @@
 
 import struct Foundation.URLRequest
 
-public enum HttpMethod: String {
+public enum HttpMethod: String, Sendable {
     case get = "GET"
     case head = "HEAD"
     case post = "POST"

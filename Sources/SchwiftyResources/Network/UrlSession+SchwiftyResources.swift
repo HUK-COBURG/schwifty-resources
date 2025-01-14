@@ -24,7 +24,7 @@
 import Foundation
 
 extension URLSession {
-    private static var schwiftyResourcesUrlSessionDelegate = SchwiftyResourcesUrlSessionDelegate()
+    private static let schwiftyResourcesUrlSessionDelegate = SchwiftyResourcesUrlSessionDelegate()
     
     internal static func makeSchwiftyResourcesUrlSession(with configuration: URLSessionConfiguration) -> URLSession {
         URLSession(configuration: configuration, delegate: schwiftyResourcesUrlSessionDelegate, delegateQueue: nil)
@@ -66,36 +66,13 @@ extension URLSession {
     }
 }
 
-private class SchwiftyResourcesUrlSessionDelegate: NSObject, URLSessionDelegate {
-    func urlSession(_: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-              let serverTrust = challenge.protectionSpace.serverTrust,
-              let certificates = CertificatePinningRegistry.sharedInstance.registeredCertificates(for: challenge.protectionSpace.host)
-        else {
-            completionHandler(.performDefaultHandling, nil)
-            return
-        }
-
-        let status = SecTrustSetAnchorCertificates(serverTrust, certificates as NSArray)
-
-        guard status == errSecSuccess else {
-            completionHandler(.cancelAuthenticationChallenge, nil)
-            return
-        }
-
-        var error: CFError?
-        let isTrusted = SecTrustEvaluateWithError(serverTrust, &error)
-
-        guard isTrusted else {
-            completionHandler(.cancelAuthenticationChallenge, nil)
-            return
-        }
-
-        completionHandler(.useCredential, URLCredential(trust: serverTrust))
+private final class SchwiftyResourcesUrlSessionDelegate: NSObject, URLSessionDelegate {
+    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        return await AuthenticationChallengeHandler.handle(challenge)
     }
 }
 
-private class URLSessionTaskDelegateHandler: NSObject, URLSessionTaskDelegate {
+private final class URLSessionTaskDelegateHandler: NSObject, URLSessionTaskDelegate {
     let sendProgressHandler: ProgressHandler?
 
     init(sendProgressHandler: ProgressHandler?) {
@@ -111,7 +88,34 @@ private class URLSessionTaskDelegateHandler: NSObject, URLSessionTaskDelegate {
         sendProgressHandler(progress)
     }
 
-    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        session.delegate?.urlSession?(session, didReceive: challenge, completionHandler: completionHandler)
+    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        return await AuthenticationChallengeHandler.handle(challenge)
+    }
+}
+
+@CertificatePinningActor
+private enum AuthenticationChallengeHandler {
+    static func handle(_ challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+              let serverTrust = challenge.protectionSpace.serverTrust,
+              let certificates = CertificatePinningRegistry.sharedInstance.registeredCertificates(for: challenge.protectionSpace.host)
+        else {
+            return (.performDefaultHandling, nil)
+        }
+
+        let status = SecTrustSetAnchorCertificates(serverTrust, certificates as NSArray)
+
+        guard status == errSecSuccess else {
+            return (.cancelAuthenticationChallenge, nil)
+        }
+
+        var error: CFError?
+        let isTrusted = SecTrustEvaluateWithError(serverTrust, &error)
+
+        guard isTrusted else {
+            return (.cancelAuthenticationChallenge, nil)
+        }
+
+        return (.useCredential, URLCredential(trust: serverTrust))
     }
 }

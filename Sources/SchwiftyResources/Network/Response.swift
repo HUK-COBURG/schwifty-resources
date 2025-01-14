@@ -24,11 +24,11 @@
 import struct Foundation.Data
 import class Foundation.HTTPURLResponse
 
-public struct Response<BodyResourceDecoder: ResourceDecoder> {
+public struct Response<BodyResourceDecoder: ResourceDecoder>: Sendable {
     /// The HTTP status of the response. Represented by the `HttpStatus` enumeration.
     public let status: HttpStatus
     /// All headers of the response.
-    public let headers: [AnyHashable: Any]
+    public let headers: [String: String]
     /// The type safe body of the response.
     public let body: BodyResourceDecoder.Content
 }
@@ -38,7 +38,7 @@ public extension Response {
         let bodyResourceDecoder = BodyResourceDecoder()
 
         status = httpUrlResponse.httpStatus
-        headers = httpUrlResponse.allHeaderFields
+        headers = httpUrlResponse.allHeaderFields as? [String: String] ?? [:]
         body = try bodyResourceDecoder.decode(data: data)
     }
 }

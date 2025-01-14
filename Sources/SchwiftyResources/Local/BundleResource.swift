@@ -25,7 +25,7 @@ import class Foundation.Bundle
 import struct Foundation.Data
 import struct Foundation.URL
 
-public protocol BundleResource {
+public protocol BundleResource: Sendable {
     /// The type of the content resource decoder. Must conform to `ResourceDecoder`.
     associatedtype ContentResourceDecoder: ResourceDecoder
 

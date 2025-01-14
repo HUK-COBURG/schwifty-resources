@@ -30,12 +30,13 @@ import Foundation
 /// The certficate needs to be in the DER format.
 /// To convert a PEM to DER:
 /// openssl x509 -in certificate.pem -outform der -out certificate.der
-public class CertificatePinningRegistry {
+@CertificatePinningActor
+public final class CertificatePinningRegistry {
     // MARK: - Private structs
 
-    private struct Entry {
+    private struct Entry: Sendable {
         let regularExpression: NSRegularExpression
-        let certificate: SecCertificate?
+        nonisolated(unsafe) let certificate: SecCertificate?
     }
 
     // MARK: - Singleton
@@ -80,4 +81,8 @@ public class CertificatePinningRegistry {
 
         return certificates
     }
+}
+
+@globalActor public actor CertificatePinningActor: GlobalActor {
+    static public let shared = CertificatePinningActor()
 }

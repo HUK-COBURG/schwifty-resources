@@ -34,9 +34,9 @@ import Foundation
 public final class CertificatePinningRegistry {
     // MARK: - Private structs
 
-    private struct Entry: Sendable {
+    private struct Entry {
         let regularExpression: NSRegularExpression
-        nonisolated(unsafe) let certificate: SecCertificate?
+        let certificate: SecCertificate?
     }
 
     // MARK: - Singleton

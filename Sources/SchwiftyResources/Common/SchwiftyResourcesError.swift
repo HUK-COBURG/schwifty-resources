@@ -21,7 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-public enum SchwiftyResourcesError: Error {
+public enum SchwiftyResourcesError: Error, Sendable {
     /// The response body could not be decoded as an UTF8 string
     case stringDecodingFailed
     /// The response could not be decoded as a JSON representation of the given type. Check the associated error for further information.

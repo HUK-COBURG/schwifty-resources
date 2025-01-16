@@ -26,13 +26,13 @@ import CryptoKit
 
 /// Conform to this protocol to provide the ability to en- and decrypt data.
 /// This is currently used by `CryptedJsonResourceCoder`
-public protocol Crypter {
+public protocol Crypter: Sendable {
     static func encrypt(data: Data) throws -> Data
     static func decrypt(data: Data) throws -> Data
 }
 
 /// Conform to this protocol to provide a valid en- and decryption key for the `AesGcmCrypter`.
-public protocol AesGcmCrypterKeyProvider {
+public protocol AesGcmCrypterKeyProvider: Sendable {
     static func provideKey() -> SymmetricKey
 }
 
@@ -80,7 +80,7 @@ public struct AesGcmCrypter<KeyProvider: AesGcmCrypterKeyProvider>: Crypter {
 }
 
 /// Conform to this protocol to provide a valid en- and decryption key for the `ChaChaPolyCrypter`.
-public protocol ChaChaPolyCrypterKeyProvider {
+public protocol ChaChaPolyCrypterKeyProvider: Sendable {
     static func provideKey() -> SymmetricKey
 }
 

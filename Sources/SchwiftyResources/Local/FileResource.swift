@@ -23,7 +23,7 @@
 
 import Foundation
 
-public protocol FileResource {
+public protocol FileResource: Sendable {
     /// The type of the content resource coder. Must conform to `ResourceCoder`.
     associatedtype ContentResourceCoder: ResourceCoder
 
@@ -102,7 +102,7 @@ public extension FileResource {
     }
 }
 
-public enum FileResourceProtection {
+public enum FileResourceProtection: Sendable {
     /// The file is stored in an encrypted format on disk and cannot be read from or written to while the device is locked or booting.
     case complete
     /// The file is stored in an encrypted format on disk after it is closed.

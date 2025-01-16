@@ -23,7 +23,7 @@
 
 import class Foundation.HTTPURLResponse
 
-public enum HttpStatus: Int {
+public enum HttpStatus: Int, Sendable {
     case `continue` = 100
     case switchingProtocols = 101
     case processing = 102

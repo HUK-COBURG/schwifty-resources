@@ -42,7 +42,7 @@ public extension SandboxResource {
     }
 }
 
-public enum SandboxLocation {
+public enum SandboxLocation: Sendable {
     case caches
     case documents
     

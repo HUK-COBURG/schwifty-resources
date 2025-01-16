@@ -23,7 +23,7 @@
 
 import Foundation
 
-public protocol HttpResource {
+public protocol HttpResource: Sendable {
     /// The type of the request body encoder. Must conform to `ResourceCoder`.
     associatedtype RequestBodyResourceEncoder: ResourceEncoder
     /// The type of the response body decoder. Must conform to `ResourceCoder`.

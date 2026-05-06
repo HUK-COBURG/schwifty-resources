@@ -108,6 +108,10 @@ do {
 ```
 
 
+### SSL Pinning
+
+SchwiftyResources supports extensible SSL pinning via the `ServerTrustEvaluating` protocol. See the [SSL Pinning Guide](docs/ssl-pinning.md) for setup instructions, built-in evaluators, and examples of custom pinning strategies.
+
 ### Writing and reading to and from the sandbox
 
 To write data to and read from the sandbox you can create a `SandboxResource`, defining the `ContentResourceCoder`, a location and the path (or just the file name).

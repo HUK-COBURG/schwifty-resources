@@ -6,8 +6,8 @@ import PackageDescription
 let package = Package(
     name: "schwifty-resources",
     platforms: [
-        .iOS(.v13),
-        .macOS(.v12),
+        .iOS(.v16),
+        .macOS(.v13),
     ],
     products: [
         .library(

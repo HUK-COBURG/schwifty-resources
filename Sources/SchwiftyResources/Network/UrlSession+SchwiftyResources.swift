@@ -97,25 +97,24 @@ private final class URLSessionTaskDelegateHandler: NSObject, URLSessionTaskDeleg
 private enum AuthenticationChallengeHandler {
     static func handle(_ challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
         guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-              let serverTrust = challenge.protectionSpace.serverTrust,
-              let certificates = CertificatePinningRegistry.sharedInstance.registeredCertificates(for: challenge.protectionSpace.host)
+              let serverTrust = challenge.protectionSpace.serverTrust
         else {
             return (.performDefaultHandling, nil)
         }
 
-        let status = SecTrustSetAnchorCertificates(serverTrust, certificates as NSArray)
+        let host = challenge.protectionSpace.host
 
-        guard status == errSecSuccess else {
-            return (.cancelAuthenticationChallenge, nil)
+        guard let evaluator = ServerTrustRegistry.sharedInstance.evaluator(for: host) else {
+            return (.performDefaultHandling, nil)
         }
 
-        var error: CFError?
-        let isTrusted = SecTrustEvaluateWithError(serverTrust, &error)
-
-        guard isTrusted else {
+        do {
+            let trusted = try evaluator.evaluate(serverTrust, for: host)
+            return trusted
+                ? (.useCredential, URLCredential(trust: serverTrust))
+                : (.cancelAuthenticationChallenge, nil)
+        } catch {
             return (.cancelAuthenticationChallenge, nil)
         }
-
-        return (.useCredential, URLCredential(trust: serverTrust))
     }
 }

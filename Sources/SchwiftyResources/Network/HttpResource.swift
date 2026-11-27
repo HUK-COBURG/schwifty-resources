@@ -174,7 +174,7 @@ public extension HttpResource {
         }
 
         if let pathModifier = pathModifier {
-            urlComponents.path = pathModifier.modify(path: urlComponents.path)
+            urlComponents.percentEncodedPath = pathModifier.modify(path: urlComponents.path)
         }
 
         let queryItems = requestQuery?.keys.map { key in

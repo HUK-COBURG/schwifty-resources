@@ -21,6 +21,8 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
+import Foundation
+
 /// Conform to this type to manipulate the path of a URL.
 public protocol PathModifier: Sendable {
     /// This function will be called before the request is sent. Return the modified path, which should replace the path before.
@@ -34,16 +36,23 @@ public struct ParametersPathModifier: PathModifier {
     public init(parameters: [String: String]) {
         self.parameters = parameters
     }
+    
+    private static let urlPathSegmentAllowed: CharacterSet = {
+        var allowed = CharacterSet.urlPathAllowed
+        allowed.remove(charactersIn: "/")
+        return allowed
+    }()
 
     public func modify(path: String) -> String {
         var modifiedPath = path
 
         for key in parameters.keys {
-            guard let value = parameters[key] else {
+            guard let value = parameters[key],
+                  let encodedValue = value.addingPercentEncoding(withAllowedCharacters: Self.urlPathSegmentAllowed) else {
                 continue
             }
 
-            modifiedPath = modifiedPath.replacingOccurrences(of: "(\(key))", with: value)
+            modifiedPath = modifiedPath.replacingOccurrences(of: "(\(key))", with: encodedValue)
         }
 
         return modifiedPath
